@@ -1,0 +1,3 @@
+first, we have download raw data by 'TUDataset' function. 
+then, convert raw data to right input format (DATANAME.txt) for DGCNN by dortmund2txt.m in 'data' dir (folds=20).
+last, run 20-fold cross validation by 'run_DGCNN.sh' (ref README.md).
