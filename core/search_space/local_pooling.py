@@ -138,7 +138,7 @@ class ASAPool(ASAPooling):
                                             edge_weight=edge_weight)
 
         x_pool_j = x_pool[edge_index[0]]
-        x_q = scatter(x_pool_j, edge_index[1], dim=0, reduce='max') #Eq.5 in ASAP
+        x_q = scatter(x_pool_j, edge_index[1], dim=0, reduce='max', dim_size=x.size(0)) #Eq.5 in ASAP
         x_q = self.lin(x_q)[edge_index[1]]  #Wm_i in Eq.6
 
         score = self.att(torch.cat([x_q, x_pool_j], dim=-1)).view(-1)  #W * \sigma(Wm_i || xj) in Eq.6
@@ -149,7 +149,7 @@ class ASAPool(ASAPooling):
         score = F.dropout(score, p=self.dropout, training=self.training)
 
         v_j = x[edge_index[0]] * score.view(-1, 1)
-        x = scatter(v_j, edge_index[1], dim=0, reduce='add') #Eq.7
+        x = scatter(v_j, edge_index[1], dim=0, reduce='add', dim_size=x.size(0)) #Eq.7
 
         # Cluster selection.
         fitness = self.gnn_score(x, edge_index, edge_weight=edge_weight).sigmoid().view(-1)
@@ -273,10 +273,10 @@ class HopPool(torch.nn.Module):
         if edge_weight == None:
             edge_weight = torch.ones(edge_index.size()[1], device=x.device)
         k_hops=[]
-        num_nodes_1hop = scatter_add(edge_weight, edge_index[0], dim=0)
+        num_nodes_1hop = scatter_add(edge_weight, edge_index[0], dim=0, dim_size=x.size(0))
         k_hops.append(num_nodes_1hop)
         for i in range(int(self.walk_length) - 1):
-            num_nodes_1hop = scatter_add(num_nodes_1hop[edge_index[1]] * edge_weight, edge_index[0], dim=0)
+            num_nodes_1hop = scatter_add(num_nodes_1hop[edge_index[1]] * edge_weight, edge_index[0], dim=0, dim_size=x.size(0))
             k_hops.append(num_nodes_1hop)
 
         # x = scatter_add(x[edge_index[1]] * edge_weight, edge_index[0], dim=0)
